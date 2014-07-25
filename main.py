@@ -4,7 +4,6 @@ import random
 import os
 import shutil
 import stat
-#import binascii
 
 # Function definitions
 
@@ -22,7 +21,7 @@ def check_RGB_border(x):
 def set_bit(image, bit, coor):
 
     bright = (0.298, 0.586, 0.114)
-    u = 100
+    u = 10
     pix = np.array(image.getpixel(coor))
     new_pix = pix
     Lambda = np.array([p * q for p, q in zip(pix, bright)])
@@ -51,7 +50,6 @@ def get_bit(image, coor):
     res = (res - 2 * pix_blue) / (4.0 * sigma)
 
     delta = res - pix_blue
-    #print(pix_blue, res, delta)
     if delta > 0:
         return '0'
     elif delta < 0:
@@ -70,7 +68,8 @@ def convert_bit2str(bit_message):
 
     bit_message = '0b' + bit_message
     n = int(bit_message, 2)
-    message = n.to_bytes((n.bit_length() + 7) // 8, 'big').decode()
+    message = n.to_bytes((n.bit_length() + 7) // 8, 'big')
+    message = message.decode('utf-8', 'replace')
     return message
 
 
@@ -97,7 +96,7 @@ def KDB_encode(image, message):
     os.mkdir("output")
 
     bit_message = convert_str2bit(message)
-    print(bit_message)
+    # print(bit_message)
     size = image.size
     key = []
 
@@ -126,7 +125,7 @@ def KDB_decode(image, key):
     for coor in key:
         bit_message += get_bit(image, coor)
 
-    print(bit_message)
+    # print(bit_message)
     message = convert_bit2str(bit_message)
     print("Done!")
 
@@ -141,19 +140,20 @@ cond = True
 
 while (cond):
     if not ((mode.lower() == 'e') or (mode.lower() == 'd')):
-        mode = input("Please enter 'e' or 'd'!\n")
+        mode = input("Please enter 'e' or 'd'!\n").lower()
     else:
         cond = False
 
 
-
-
-#keyfile = open("output/key.txt", 'r')
-
-#key = []
-# for line in keyfile:
-    # key.append(eval(line))
-# print(key)
-
-#im_new = Image.open("output/cyphered.bmp")
-#print(KDB_decode(im_new, key))
+if (mode == 'e'):
+    image_path = input("Please enter the path to your image!\n")
+    message = input("Please input your message!\n")
+    KDB_encode(Image.open(image_path), message)
+elif (mode == 'd'):
+    image_path = input("Please enter the path to your image!\n")
+    key_path = input("Please enter the path to your keyfile!\n")
+    key_file = open(key_path, 'r')
+    key = []
+    for line in key_file:
+        key.append(eval(line))
+    print("Decoded message:\n" + KDB_decode(Image.open(image_path), key))
