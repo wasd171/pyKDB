@@ -134,14 +134,15 @@ def KDB_decode(image, key):
 
 # Main code
 
-print("Hello!\nWould you like to encode your message or decode it? (e/d?)")
+print("Hello!\nWould you like to encode your message or decode it?")
+decision = input("(e/d?)")
 
-keyfile = open("output/key.txt", 'r')
+#keyfile = open("output/key.txt", 'r')
 
-key = []
-for line in keyfile:
-    key.append(eval(line))
+#key = []
+#for line in keyfile:
+    #key.append(eval(line))
 #print(key)
 
-im_new = Image.open("output/cyphered.bmp")
-print(KDB_decode(im_new, key))
+#im_new = Image.open("output/cyphered.bmp")
+#print(KDB_decode(im_new, key))
