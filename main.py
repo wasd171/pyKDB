@@ -134,10 +134,7 @@ def KDB_decode(image, key):
 
 # Main code
 
-im_original = Image.open("zhir.bmp")
-message = "I adore my little charming Ksololo"
-KDB_encode(im_original, message)
-
+print("Hello!\nWould you like to encode your message or decode it? (e/d?)")
 
 keyfile = open("output/key.txt", 'r')
 
