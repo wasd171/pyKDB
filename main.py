@@ -114,17 +114,18 @@ def KDB_encode(image, message):
     key = []
 
     for bit in bit_message:
-        temp_coor = random_coor(size)
         cond = True
         while cond:
+            temp_coor = random_coor(size)
             while (temp_coor in key):
                 temp_coor = random_coor(size)
-                #print("Bad coor")
-            #print("Good coor found!")
+                # print("Bad coor")
+            # print("Good coor found!")
+            print(temp_coor, str(delta_func(get_bit(image, temp_coor))), bit)
             set_bit(image, bit, temp_coor)
             cond = (str(delta_func(get_bit(image, temp_coor))) != bit)
-            #print(str(delta_func(get_bit(image, temp_coor))), bit)
-            #print("Bad random")
+            # print(str(delta_func(get_bit(image, temp_coor))), bit)
+            # print("Bad random")
         key.append(temp_coor)
         print(len(key))
 
@@ -151,12 +152,12 @@ def KDB_decode(image, key_path):
     raw_bit_message = []
     for coor in key:
         raw_bit_message.append(get_bit(image, coor))
-    #raw_bit_message = divide(raw_bit_message, 8)
-    #print(raw_bit_message)
-    #bit_message = np.array(tuple(map(np.mean, raw_bit_message)))
+    # raw_bit_message = divide(raw_bit_message, 8)
+    # print(raw_bit_message)
+    # bit_message = np.array(tuple(map(np.mean, raw_bit_message)))
     # print(bit_message)
     bit_message = np.array(tuple(map(delta_func, raw_bit_message)))
-    #print(bit_message)
+    # print(bit_message)
     bit_message = np.char.mod('%d', bit_message)
     bit_message = ''.join(bit_message)
     print(bit_message)
@@ -174,8 +175,8 @@ def behaviour(mode):
     elif (mode == 'd'):
         image_path = input("Please enter the path to your image!\n")
         key_path = input("Please enter the path to your keyfile!\n")
-        print(
-            "Decoded message:\n" + KDB_decode(Image.open(image_path), key_path))
+        print("Decoded message:\n")
+        print(KDB_decode(Image.open(image_path), key_path))
 # Main code
 '''
 print("Hello!\n Would you like to encode your message or decode it?")
