@@ -49,21 +49,16 @@ def get_bit(image, coor):
 def set_bit(image, bit, coor):
 
     bright = (0.298, 0.586, 0.114)
-    u = 1
+    u = 0.01
     pix = np.array(image.getpixel(coor))
     new_pix = pix
     Lambda = np.array([p * q for p, q in zip(pix, bright)])
-    
+
     if bit == '0':
         new_pix = pix - u * Lambda
     elif bit == '1':
         new_pix = pix + u * Lambda
-    '''
-    if bit == '0':
-        new_pix = pix - (0, 0, 1)
-    elif bit == '1':
-        new_pix = pix + (0, 0, 1)
-    '''
+
     new_pix = tuple(new_pix.round().astype(int))
     new_pix = tuple(map(check_RGB_border, new_pix))
     image.putpixel(coor, new_pix)
@@ -114,20 +109,21 @@ def KDB_encode(image, message):
     key = []
 
     for bit in bit_message:
-        cond = True
-        while cond:
-            temp_coor = random_coor(size)
-            while (temp_coor in key):
+        for _ in itertools.repeat(None, 4):
+            cond = True
+            while cond:
                 temp_coor = random_coor(size)
-                # print("Bad coor")
-            # print("Good coor found!")
-            print(temp_coor, str(delta_func(get_bit(image, temp_coor))), bit)
-            set_bit(image, bit, temp_coor)
-            cond = (str(delta_func(get_bit(image, temp_coor))) != bit)
-            # print(str(delta_func(get_bit(image, temp_coor))), bit)
-            # print("Bad random")
-        key.append(temp_coor)
-        print(len(key))
+                while (temp_coor in key):
+                    temp_coor = random_coor(size)
+                    # print("Bad coor")
+                # print("Good coor found!")
+                #print(temp_coor, str(delta_func(get_bit(image, temp_coor))), bit)
+                set_bit(image, bit, temp_coor)
+                cond = (str(delta_func(get_bit(image, temp_coor))) != bit)
+                # print(str(delta_func(get_bit(image, temp_coor))), bit)
+                # print("Bad random")
+            key.append(temp_coor)
+            #print(len(key))
 
     image.save("output/res_image.bmp")
 
@@ -152,11 +148,11 @@ def KDB_decode(image, key_path):
     raw_bit_message = []
     for coor in key:
         raw_bit_message.append(get_bit(image, coor))
-    # raw_bit_message = divide(raw_bit_message, 8)
+    raw_bit_message = divide(raw_bit_message, 4)
     # print(raw_bit_message)
-    # bit_message = np.array(tuple(map(np.mean, raw_bit_message)))
+    bit_message = np.array(tuple(map(np.mean, raw_bit_message)))
     # print(bit_message)
-    bit_message = np.array(tuple(map(delta_func, raw_bit_message)))
+    bit_message = np.array(tuple(map(delta_func, bit_message)))
     # print(bit_message)
     bit_message = np.char.mod('%d', bit_message)
     bit_message = ''.join(bit_message)
@@ -178,7 +174,7 @@ def behaviour(mode):
         print("Decoded message:\n")
         print(KDB_decode(Image.open(image_path), key_path))
 # Main code
-'''
+
 print("Hello!\n Would you like to encode your message or decode it?")
 mode = input("(e/d?)    ")
 
@@ -194,3 +190,4 @@ behaviour(mode)
 '''
 KDB_encode(Image.open("image.bmp"), "Good night, sweet prince")
 print(KDB_decode(Image.open("output/res_image.bmp"), "output/key.txt"))
+'''
