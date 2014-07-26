@@ -48,6 +48,7 @@ def get_bit(image, coor):
 
 def set_bit(image, bit, coor):
 
+    temp_image = image.copy()
     bright = (0.298, 0.586, 0.114)
     u = 0.01
     pix = np.array(image.getpixel(coor))
@@ -61,9 +62,9 @@ def set_bit(image, bit, coor):
 
     new_pix = tuple(new_pix.round().astype(int))
     new_pix = tuple(map(check_RGB_border, new_pix))
-    image.putpixel(coor, new_pix)
+    temp_image.putpixel(coor, new_pix)
 
-    return
+    return temp_image
 
 
 def convert_str2bit(message):
@@ -104,7 +105,6 @@ def KDB_encode(image, message):
     os.mkdir("output")
 
     bit_message = convert_str2bit(message)
-    print(bit_message)
     size = image.size
     key = []
 
@@ -115,23 +115,20 @@ def KDB_encode(image, message):
                 temp_coor = random_coor(size)
                 while (temp_coor in key):
                     temp_coor = random_coor(size)
-                    # print("Bad coor")
-                # print("Good coor found!")
-                #print(temp_coor, str(delta_func(get_bit(image, temp_coor))), bit)
-                set_bit(image, bit, temp_coor)
-                cond = (str(delta_func(get_bit(image, temp_coor))) != bit)
-                # print(str(delta_func(get_bit(image, temp_coor))), bit)
-                # print("Bad random")
+                temp_image = set_bit(image, bit, temp_coor)
+                cond = (str(delta_func(get_bit(temp_image, temp_coor))) != bit)
             key.append(temp_coor)
-            #print(len(key))
+            image = temp_image.copy()
 
     image.save("output/res_image.bmp")
+    image.close()
+    temp_image.close()
 
     with open("output/key.txt", 'a') as file:
         for coor in key:
             file.write("{}\n".format(coor))
 
-    print("Done!")
+    print("Encoding done!")
 
     return
 
@@ -149,16 +146,14 @@ def KDB_decode(image, key_path):
     for coor in key:
         raw_bit_message.append(get_bit(image, coor))
     raw_bit_message = divide(raw_bit_message, 4)
-    # print(raw_bit_message)
+
     bit_message = np.array(tuple(map(np.mean, raw_bit_message)))
-    # print(bit_message)
     bit_message = np.array(tuple(map(delta_func, bit_message)))
-    # print(bit_message)
     bit_message = np.char.mod('%d', bit_message)
     bit_message = ''.join(bit_message)
-    print(bit_message)
+
     message = convert_bit2str(bit_message)
-    print("Done!")
+    print("Decoding done!")
 
     return message
 
@@ -187,7 +182,3 @@ while (cond):
         cond = False
 
 behaviour(mode)
-'''
-KDB_encode(Image.open("image.bmp"), "Good night, sweet prince")
-print(KDB_decode(Image.open("output/res_image.bmp"), "output/key.txt"))
-'''
