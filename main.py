@@ -5,10 +5,46 @@ import os
 import shutil
 import stat
 import itertools
+import time
+import sys
+
+#Global variables
+
+#Pixel/bit. Default is 4
+times = 4
+
+#Describes the level of image bit corruption. Default is 0.01
+corruption = 0.01
+
 
 # Function definitions
-divide = lambda lst, sz: [np.array(lst[i:i + sz])
-                          for i in range(0, len(lst), sz)]
+
+
+# update_progress() : Displays or updates a console progress bar
+## Accepts a float between 0 and 1. Any int will be converted to a float.
+## A value under 0 represents a 'halt'.
+## A value at 1 or bigger represents 100%
+def update_progress(progress):
+    barLength = 10 # Modify this to change the length of the progress bar
+    status = ""
+    if isinstance(progress, int):
+        progress = float(progress)
+    if not isinstance(progress, float):
+        progress = 0
+        status = "error: progress var must be float\r\n"
+    if progress < 0:
+        progress = 0
+        status = "Halt...\r\n"
+    if progress >= 1:
+        progress = 1
+        status = "Done...\r\n"
+    block = int(round(barLength*progress))
+    text = "\rProgress: [{0}] {1}% {2}".format( "#"*block + "-"*(barLength-block), round(progress*100, 2), status)
+    sys.stdout.write(text)
+    sys.stdout.flush()
+
+def divide(lst, sz):
+    return [np.array(lst[i:i + sz])for i in range(0, len(lst), sz)]
 
 
 def delta_func(delta):
@@ -50,15 +86,14 @@ def set_bit(image, bit, coor):
 
     temp_image = image.copy()
     bright = (0.298, 0.586, 0.114)
-    u = 0.01
     pix = np.array(image.getpixel(coor))
     new_pix = pix
     Lambda = np.array([p * q for p, q in zip(pix, bright)])
 
     if bit == '0':
-        new_pix = pix - u * Lambda
+        new_pix = pix - corruption * Lambda
     elif bit == '1':
-        new_pix = pix + u * Lambda
+        new_pix = pix + corruption * Lambda
 
     new_pix = tuple(new_pix.round().astype(int))
     new_pix = tuple(map(check_RGB_border, new_pix))
@@ -109,7 +144,7 @@ def KDB_encode(image, message):
     key = []
 
     for bit in bit_message:
-        for _ in itertools.repeat(None, 4):
+        for _ in itertools.repeat(None, times):
             cond = True
             while cond:
                 temp_coor = random_coor(size)
@@ -119,6 +154,7 @@ def KDB_encode(image, message):
                 cond = (str(delta_func(get_bit(temp_image, temp_coor))) != bit)
             key.append(temp_coor)
             image = temp_image.copy()
+            update_progress(len(key)/(times*len(bit_message)))
 
     image.save("output/res_image.bmp")
     image.close()
@@ -145,7 +181,8 @@ def KDB_decode(image, key_path):
     raw_bit_message = []
     for coor in key:
         raw_bit_message.append(get_bit(image, coor))
-    raw_bit_message = divide(raw_bit_message, 4)
+        update_progress(len(raw_bit_message)/len(key))
+    raw_bit_message = divide(raw_bit_message, times)
 
     bit_message = np.array(tuple(map(np.mean, raw_bit_message)))
     bit_message = np.array(tuple(map(delta_func, bit_message)))
@@ -166,11 +203,15 @@ def behaviour(mode):
     elif (mode == 'd'):
         image_path = input("Please enter the path to your image!\n")
         key_path = input("Please enter the path to your keyfile!\n")
-        print("Decoded message:\n")
-        print(KDB_decode(Image.open(image_path), key_path))
+        message = KDB_decode(Image.open(image_path), key_path)
+
+        print("BEGIN MESSAGE\n"+"="*17)
+        print(message)
+        print("="*17+"\nEND MESSAGE")
+
 # Main code
 
-print("Hello!\n Would you like to encode your message or decode it?")
+print("Hello!\nWould you like to encode your message or decode it?")
 mode = input("(e/d?)    ")
 
 cond = True
